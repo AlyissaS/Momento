@@ -1,111 +1,103 @@
-import { StyleSheet, View, Text, Pressable, TextInput, ScrollView, Button, ActivityIndicator} from "react-native";
+import { StyleSheet, View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { Image } from 'expo-image';
-import {Link, useLocalSearchParams} from 'expo-router';
-import { DATABASE, FIREBASE_AUTH, FIREBASE_DB } from "@/FirebaseConfig";
+import { useLocalSearchParams } from 'expo-router';
+import { DATABASE, FIREBASE_AUTH } from "@/FirebaseConfig";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { firebase } from "@react-native-firebase/auth";
-import {ref, set} from 'firebase/database';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'; // Use Firebase Auth
+import { ref, set } from 'firebase/database';
 
 export default function SignUpScreen() {
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [name, setName] = useState('');
-	const [number, setPhoneNumber] = useState('');
-  	const [value, setValue] = useState(null);
-	const [value1, setValue1] = useState(null);
-	const [loading, setLoading] = useState(false);
-	const { type } = useLocalSearchParams<{ type: string }>();
-	const auth = FIREBASE_AUTH;
-	  // State for selected button
-	  const [selectedButton, setSelectedButton] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [number, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { type } = useLocalSearchParams<{ type: string }>();
+  
+  // State for selected button
+  const [selectedButton, setSelectedButton] = useState('');
 
-	const signUp = async () => {
-		setLoading(true);
-		try {
-		  // Create user with email and password
-		  const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-		  const user = userCredential.user; // Extract the user from the credential
-	  
-		  if (user) {
-			const userId = user.uid;
-			const database = DATABASE;
-	  
-			// Update the Firebase Realtime Database
-			await set(ref(database,'users/' + userId),{
-			  firstname: name,
-			  email: email,
-			  password: password,
-			  selectedButton: selectedButton,
-			  emailVerified: false,
-			  uid: userId,
-			  status: true,
-			  online: true,
-			});
-	  
-			console.log('User created and data stored successfully');
-			alert('Check your emails!');
-		  }
-		} catch (error : any) {
-		  console.log('Registration failed:', error.message);
-		  alert('Registration failed: ' + error.message);
-		} finally {
-		  setLoading(false);
-		}
-	  };
-	    // Function to handle button press
-		const handleButtonPress = (button : string) => {
-			setSelectedButton(button);
-		};
-	  
-  	
-  	return (
-		<>
-	<View style={styles.registrationScreenPart2}>
-	<Image style={[styles.ripplepic2Icon, styles.iconLayout]} contentFit="cover" source="assets/images/ripplepic.png" />
-	<Image style={[styles.fishes1Icon, styles.iconLayout]} contentFit="cover" source="assets/images/fishes.png" />
-	<View style={[styles.registrationScreenPart2Child]} />
-	<SafeAreaView>
-	<TextInput style={[styles.number, styles.emailPosition]} value={number} autoCapitalize="none" keyboardType="number-pad" onChangeText={setPhoneNumber} placeholder="Phone Number"/>
-	<TextInput style={[styles.email, styles.emailPosition]} value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} placeholder="Email">
-	</TextInput>
-	<TextInput style={[styles.fullName, styles.emailPosition]} value={name} autoCapitalize="none" keyboardType="default" onChangeText={setName} placeholder="Full Name">
-	</TextInput>
-	<TextInput style={[styles.password, styles.emailPosition]} value={password} onChangeText={setPassword} secureTextEntry placeholder="Password">
-	</TextInput>
-	</SafeAreaView>
-	<Text style={styles.signUp}>Sign Up</Text>
-	<Image style={styles.registrationScreenPart2Item} contentFit="cover" source="assets/images/Group 1.png" />
-	<View style={styles.rectangleGroup}>
-	<Text style={styles.areYouThe}>Are you the patient, primary caretaker or family member?</Text>
-	</View>
-	<View style={styles.buttonContainer}>
-                    {['Family Member', 'Caretaker', 'Patient'].map((label) => (
-                        <Pressable
-                            key={label}
-                            onPress={() => handleButtonPress(label)}
-                            style={[
-                                styles.button,
-                                { backgroundColor: selectedButton === label ? 'orange' : '#d9d9d9' } // Change color based on selection
-                            ]}
-                        >
-                            <Text style={styles.buttonText}>{label}</Text>
-                        </Pressable>
-                    ))}
-                </View>
-	</View>
-	{loading ? (
-		<ActivityIndicator size="large" color="white"/>
-	  ):(
-		<View style={[styles.submitButton, styles.submitLayout]}>
-		<Pressable style={[styles.submitButtonChild, styles.submitLayout]} onPress={signUp}>
-        <Text style={[styles.submit]}>Sign Up</Text>
-      </Pressable>
-	  </View>
-	  )}
-	</>
-	);
-    };
+  const signUp = async () => {
+    setLoading(true);
+    try {
+      // Create user with email and password
+      const auth = getAuth(); // Get the Auth instance
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user; // Extract the user from the credential
+
+      if (user) {
+        const userId = user.uid;
+
+        // Update the Firebase Realtime Database
+        await set(ref(DATABASE, 'users/' + userId), {
+          firstname: name,
+          email: email,
+          password: password,
+          selectedButton: selectedButton,
+          emailVerified: false,
+          uid: userId,
+          status: true,
+          online: true,
+        });
+
+        console.log('User created and data stored successfully');
+        alert('Check your emails!');
+      }
+    } catch (error: any) {
+      console.log('Registration failed:', error.message);
+      alert('Registration failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleButtonPress = (button: string) => {
+    setSelectedButton(button);
+  };
+
+  return (
+    <>
+      <View style={styles.registrationScreenPart2}>
+        <Image style={[styles.ripplepic2Icon, styles.iconLayout]} contentFit="cover" source="assets/images/ripplepic.png" />
+        <Image style={[styles.fishes1Icon, styles.iconLayout]} contentFit="cover" source="assets/images/fishes.png" />
+        <SafeAreaView>
+          <TextInput style={[styles.number, styles.emailPosition]} value={number} autoCapitalize="none" keyboardType="number-pad" onChangeText={setPhoneNumber} placeholder="Phone Number"/>
+          <TextInput style={[styles.email, styles.emailPosition]} value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} placeholder="Email"/>
+          <TextInput style={[styles.fullName, styles.emailPosition]} value={name} autoCapitalize="none" keyboardType="default" onChangeText={setName} placeholder="Full Name"/>
+          <TextInput style={[styles.password, styles.emailPosition]} value={password} onChangeText={setPassword} secureTextEntry placeholder="Password"/>
+        </SafeAreaView>
+        <Text style={styles.signUp}>Sign Up</Text>
+        <View style={styles.rectangleGroup}>
+          <Text style={styles.areYouThe}>Are you the patient, primary caretaker or family member?</Text>
+        </View>
+        <View style={styles.buttonContainer}>
+          {['Family Member', 'Caretaker', 'Patient'].map((label) => (
+            <Pressable
+              key={label}
+              onPress={() => handleButtonPress(label)}
+              style={[
+                styles.button,
+                { backgroundColor: selectedButton === label ? 'orange' : '#d9d9d9' }
+              ]}
+            >
+              <Text style={styles.buttonText}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="white"/>
+        ) : (
+          <View style={[styles.submitButton, styles.submitLayout]}>
+            <Pressable style={[styles.submitButtonChild, styles.submitLayout]} onPress={signUp}>
+              <Text style={[styles.submit]}>Sign Up</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    </>
+  );
+};
       			
       			const styles = StyleSheet.create({
 					buttonContainer: {

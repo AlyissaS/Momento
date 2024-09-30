@@ -10,14 +10,6 @@ const BottomLoginSheet = () => {
 
   return (
     <View style={[styles.container, { paddingBottom: bottom}]}>
-       <TouchableOpacity style={[defaultStyles.btn,styles.btnLight]}>
-        <Ionicons name='logo-apple' size={20} style={styles.btnIcon} />
-        <Text style={styles.btnLightText}>Continue with Apple</Text>
-       </TouchableOpacity>
-       <TouchableOpacity style={[defaultStyles.btn,styles.btnDark]}>
-        <Ionicons name='logo-google' size={20} style={styles.btnIcon} color={"white"} />
-        <Text style={styles.btnDarkText}>Continue with Google</Text>
-       </TouchableOpacity>
        <Link href={{
         pathname: "../signup",
         params: { type: 'register' },

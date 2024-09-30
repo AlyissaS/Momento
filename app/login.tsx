@@ -1,57 +1,76 @@
-import {StyleSheet, View, Text, Pressable,TextInput, ActivityIndicator} from "react-native";
+import { StyleSheet, View, Text, Pressable, TextInput, ActivityIndicator, Platform } from "react-native";
 import { Image } from 'expo-image';
-import { useState } from 'react';
-import {signInWithEmailAndPassword } from 'firebase/auth';
-import {router, useLocalSearchParams } from 'expo-router';
+import { useState, useEffect } from 'react';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { router, useLocalSearchParams } from 'expo-router';
 import { FIREBASE_AUTH } from "@/FirebaseConfig";
-
+import { app} from '@/firebaseConfig1'; 
 
 export default function LoginScreen() {
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [loading, setLoading] = useState(false);
-	const { type } = useLocalSearchParams<{ type: string }>();
-	const auth = FIREBASE_AUTH;
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { type } = useLocalSearchParams<{ type: string }>();
 
-	const signIn = async () => {
-		setLoading(true);
-		try {
-			const response = await signInWithEmailAndPassword(auth,email,password);
-			console.log(response);
-			router.navigate('/tabs/dashboard')
-		} catch(error : any){
-			console.log(error);
-			alert('Sign in failed:' + error.message);
-		} finally {
-			setLoading(false);
-		}
-	}
-  	return (
-		
-      <View style={styles.loginScreen}>
+  const signIn = async () => {
+    setLoading(true);
+    try {
+      // Check for web platform before accessing window-related functionality
+      if (Platform.OS === 'web') {
+        const auth = getAuth(app);
+        const response = await signInWithEmailAndPassword(auth, email, password);
+        console.log(response);
+        router.navigate('/tabs/dashboard');
+      } else {
+        const auth = FIREBASE_AUTH;
+        const response = await signInWithEmailAndPassword(auth, email, password);
+        console.log(response);
+        router.navigate('/tabs/dashboard');
+      }
+    } catch (error: any) {
+      console.log(error);
+      alert('Sign in failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.loginScreen}>
       <View style={[styles.form, styles.formLayout]}>
-      <View style={[styles.formChild, styles.formLayout]} />
-      <Text style={[styles.forgotPassword, styles.logIn1FlexBox]}>Forgot password?</Text>
-      <View style={[styles.logIn, styles.logLayout]}>
-      <View style={[styles.logInChild, styles.logLayout]} />
-	  {loading ? (
-		<ActivityIndicator size="large" color="white"/>
-	  ):(
-		<Pressable style={[styles.logIn1, styles.logLayout]} onPress={signIn}>
-        <Text style={styles.textLayout}>Log In</Text>
-      </Pressable>
-	  )}
-      </View>
-      <TextInput style={[styles.password, styles.emailPosition]} value={password} onChangeText={setPassword} secureTextEntry placeholder="Password">
-        </TextInput>
-        <TextInput style={[styles.email, styles.emailPosition]} value={email} autoCapitalize="none" keyboardType="email-address" onChangeText={setEmail} placeholder="Email">
-        </TextInput>
-      <Text style={styles.logIn2}>Log In</Text>
+        <View style={[styles.formChild, styles.formLayout]} />
+        <Text style={[styles.forgotPassword, styles.logIn1FlexBox]}>Forgot password?</Text>
+        <View style={[styles.logIn, styles.logLayout]}>
+          <View style={[styles.logInChild, styles.logLayout]} />
+          {loading ? (
+            <ActivityIndicator size="large" color="white" />
+          ) : (
+            <Pressable style={[styles.logIn1, styles.logLayout]} onPress={signIn}>
+              <Text style={styles.textLayout}>Log In</Text>
+            </Pressable>
+          )}
+        </View>
+        <TextInput 
+          style={[styles.password, styles.emailPosition]} 
+          value={password} 
+          onChangeText={setPassword} 
+          secureTextEntry 
+          placeholder="Password" 
+        />
+        <TextInput 
+          style={[styles.email, styles.emailPosition]} 
+          value={email} 
+          autoCapitalize="none" 
+          keyboardType="email-address" 
+          onChangeText={setEmail} 
+          placeholder="Email" 
+        />
+        <Text style={styles.logIn2}>Log In</Text>
       </View>
       <Image style={styles.loginpicIcon} contentFit="cover" source="assets/images/loginpic.png" />
-      </View>
-	  );
-        				};
+    </View>
+  );
+}
         				
         				const styles = StyleSheet.create({
 							container: {
